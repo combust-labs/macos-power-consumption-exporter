@@ -200,6 +200,7 @@ func (r *PowerUsageReader) updateMetric(metricType string, value float64) {
 	case "combined":
 		r.lastMetrics.CombinedPower = value
 		metrics.CombinedPower.WithLabelValues(r.hostname).Set(value)
+		log.Info().Str("metrics", r.PowerMetricsToString(r.lastMetrics)).Msg("power metrics updated")
 	}
 }
 
