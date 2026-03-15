@@ -1,39 +1,161 @@
-# macOS power usage prometheus exporter
+# macOS Power Usage Prometheus Exporter
+
+![Go](https://img.shields.io/badge/Go-1.26+-00ADD8?style=flat&logo=go)
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
 
 This program exports the power usage of your macOS device as Prometheus metrics.
 
-The program requires `sudo` permissions because it uses `powermetrics` command to access the power usage data.
+## Features
 
-## Components
+- Exports CPU, GPU, ANE (Apple Neural Engine), and combined power usage
+- Prometheus metrics with hostname label
+- Automatic reader restart on failure
+- Graceful shutdown handling
+- Health check endpoint
 
-This program contains a number of components:
+## Prerequisites
 
-1. `power_usage_reader` - the component responsible for reading power metrics from the operating system. It does this using the following command: `powermetrics | grep -e "Power:" -e "Combined Power"`. This command produces output continuously until terminated with `CTRL+C`, every iteration produces following lines:
+- Go 1.26 or later
+- macOS (required for `powermetrics` command)
+- `sudo` permissions (required for `powermetrics`)
+
+## Installation
+
+### From Source
+
+```bash
+# Clone the repository
+git clone https://github.com/combust-labs/macos-power-consumption-exporter.git
+cd macos-power-consumption-exporter
+
+# Build
+make build
+
+# Or install dependencies and build
+make install
+make build
+```
+
+### Pre-built Binaries
+
+Download the latest release from the [Releases](https://github.com/combust-labs/macos-power-consumption-exporter/releases) page.
+
+## Usage
+
+### Basic Usage
+
+```bash
+sudo ./macos-power-consumption-exporter
+```
+
+The exporter will start on `http://localhost:8080` by default.
+
+### Custom Address
+
+```bash
+sudo ./macos-power-consumption-exporter -addr :9090
+```
+
+### Command-line Options
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-addr` | `:8080` | HTTP server address |
+| `-log-level` | `info` | Log level (debug, info, warn, error) |
+
+### Makefile Targets
+
+```bash
+make build    # Build the binary
+make test     # Run tests with coverage
+make run      # Build and run (requires sudo)
+make clean    # Clean build artifacts
+```
+
+## Prometheus Configuration
+
+Add a scrape configuration to your `prometheus.yml`:
+
+```yaml
+scrape_configs:
+  - job_name: 'macos-power-usage'
+    static_configs:
+      - targets: ['localhost:8080']
+```
+
+## Exported Metrics
+
+| Metric | Type | Description | Labels |
+|--------|------|-------------|--------|
+| `power_usage_reader_cpu_power` | Gauge | CPU power in milliwatts | hostname |
+| `power_usage_reader_gpu_power` | Gauge | GPU power in milliwatts | hostname |
+| `power_usage_ane_power` | Gauge | Apple Neural Engine power in milliwatts | hostname |
+| `power_usage_combined_power` | Gauge | Combined power (CPU + GPU + ANE) in milliwatts | hostname |
+| `power_usage_reader_restart_count` | Counter | Number of reader restarts | hostname |
+
+## Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `/metrics` | Prometheus metrics endpoint |
+| `/health` | Health check endpoint |
+
+## Architecture
+
+This program contains two main components:
+
+1. **Power Usage Reader** - Reads power metrics from the operating system using `powermetrics` command
+2. **Power Usage Exporter** - HTTP server that exposes metrics to Prometheus
+
+### Data Flow
 
 ```
-CPU Power: 1996 mW
-GPU Power: 324 mW
-ANE Power: 0 mW
-Combined Power (CPU + GPU + ANE): 2320 mW
-GPU Power: 324 mW
+powermetrics → Parser → Prometheus Metrics → HTTP Server → Prometheus
 ```
 
-The reader parses this output and outputs the following metrics:
+## Testing
 
-- `power_usage_reader_cpu_power` - the CPU power usage in milliwatts,
-- `power_usage_reader_gpu` - the GPU power usage in milliwatts,
-- `power_usage_ane_power` - the Apple Neural Engine power usage in milliwatts,
-- `power_usage_combined_power` - the combined power usage in milliwatts.
+```bash
+# Run unit tests
+go test ./...
 
-The second occurrence of the `GPU Power` line can be ignored.
+# Run tests with coverage
+make test
 
-The reader records the samples every time it receives the data using a programming-language-specific
- prometheus metric registry. Metrics capture details like hostname, timestamp, etc.
+# Run specific test
+go test -v ./internal/power_usage_reader/...
+```
 
-2. `power_usage_exporter` - this component exposes the metrics to the Prometheus server. It is a simple HTTP server that serves the metrics at `/metrics` endpoint.
+## Troubleshooting
 
-## This implementation
+### Permission Denied
 
-This version is implemented in Go 1.26.1 programming language. The module is called `github.com/combust-labs/macos-power-consumption-exporter` The program starts both components in the correct order: the reader first, then the exporter. If the reader fails, the program attempts automatic reader component restart. Whenever this happens, the `power_usage_reader_restart_count` metric is incremented.
+The `powermetrics` command requires sudo permissions. Make sure to run the exporter with sudo:
 
-All components are covered by unit and integration tests.
+```bash
+sudo ./macos-power-consumption-exporter
+```
+
+### Port Already in Use
+
+If port 8080 is already in use, specify a different port:
+
+```bash
+sudo ./macos-power-consumption-exporter -addr :8081
+```
+
+### No Metrics Showing
+
+Ensure `powermetrics` is available on your system:
+
+```bash
+sudo powermetrics --help
+```
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request.
