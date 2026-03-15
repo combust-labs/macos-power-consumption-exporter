@@ -136,15 +136,16 @@ func (r *PowerUsageReader) run(ctx context.Context) {
 
 func (r *PowerUsageReader) readMetrics() {
 	cmd := exec.Command("sudo", "powermetrics")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 
-	// Create a pipe for stdout
+	// Create a pipe for stdout - cannot use both Stdout set AND StdoutPipe
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Error().Err(err).Msg("failed to create stdout pipe")
 		return
 	}
+
+	// Also pipe stderr so we can see any errors
+	cmd.Stderr = os.Stderr
 
 	if err := cmd.Start(); err != nil {
 		log.Error().Err(err).Msg("failed to start powermetrics")
