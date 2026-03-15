@@ -12,8 +12,6 @@ import (
 	"github.com/combust-labs/macos-power-consumption-exporter/internal/power_usage_exporter"
 	"github.com/combust-labs/macos-power-consumption-exporter/internal/power_usage_reader"
 	"github.com/combust-labs/macos-power-consumption-exporter/pkg/metrics"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -59,13 +57,6 @@ func main() {
 		log.Info().Str("signal", sig.String()).Msg("received shutdown signal")
 		cancel()
 	}()
-
-	// Track reader restarts
-	restartCount := promauto.NewCounter(prometheus.CounterOpts{
-		Name: "power_usage_reader_restart_count",
-		Help: "Number of times the reader component has been restarted",
-	})
-	_ = restartCount // Use the metric
 
 	// Create and start the exporter
 	exporter := power_usage_exporter.New(&power_usage_exporter.Config{
