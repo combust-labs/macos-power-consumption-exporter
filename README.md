@@ -1,39 +1,366 @@
-# macOS power usage prometheus exporter
+# macOS Power Usage Prometheus Exporter
+
+![Go](https://img.shields.io/badge/Go-1.26+-00ADD8?style=flat&logo=go)
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
 
 This program exports the power usage of your macOS device as Prometheus metrics.
 
-The program requires `sudo` permissions because it uses `powermetrics` command to access the power usage data.
+## Features
 
-## Components
+- Exports CPU, GPU, ANE (Apple Neural Engine), and combined power usage
+- Prometheus metrics with hostname label
+- Automatic reader restart on failure
+- Graceful shutdown handling
+- Health check endpoint
 
-This program contains a number of components:
+## Prerequisites
 
-1. `power_usage_reader` - the component responsible for reading power metrics from the operating system. It does this using the following command: `powermetrics | grep -e "Power:" -e "Combined Power"`. This command produces output continuously until terminated with `CTRL+C`, every iteration produces following lines:
+- Go 1.26 or later
+- macOS (required for `powermetrics` command)
+- `sudo` permissions (required for `powermetrics`)
+
+> **Note:** This program cannot run in a container. The `powermetrics` command is a macOS-specific tool that requires direct hardware access to CPU, GPU, and ANE power sensors. It must run directly on a Mac.
+
+## Installation
+
+### From Source
+
+```bash
+# Clone the repository
+git clone https://github.com/combust-labs/macos-power-consumption-exporter.git
+cd macos-power-consumption-exporter
+
+# Build
+make build
+
+# Or install dependencies and build
+make install
+make build
+```
+
+### Pre-built Binaries
+
+Download the latest release from the [Releases](https://github.com/combust-labs/macos-power-consumption-exporter/releases) page.
+
+### DMG Installer (Recommended for macOS)
+
+For a native macOS installation experience, download the DMG installer:
+
+1. Download the latest `.dmg` file from [Releases](https://github.com/combust-labs/macos-power-consumption-exporter/releases)
+2. Double-click the DMG to mount it
+3. Drag "MacOS Power Consumption Exporter" to the Applications folder
+4. Run the launcher to start the exporter (see below)
+
+#### Starting the Exporter (After DMG Install)
+
+The application includes a **launcher script** for managing the exporter. Since the app requires elevated privileges to access `powermetrics`, use Terminal to run it:
+
+```bash
+# Navigate to the app bundle
+cd "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS"
+
+# Install and start the exporter (requires admin password)
+sudo ./launcher install
+```
+
+The launcher will:
+- Install a launch agent for auto-start on login
+- Start the exporter immediately
+- Create log files in `~/Library/Logs/com.combust.macos-power-consumption-exporter/`
+
+#### Launcher Commands
+
+The launcher script supports the following commands:
+
+| Command | Description |
+|---------|-------------|
+| `sudo ./launcher install` | Install launch agent and start exporter |
+| `sudo ./launcher start` | Start the exporter |
+| `sudo ./launcher stop` | Stop the exporter |
+| `./launcher status` | Check if exporter is running |
+| `./launcher open` | Open metrics page in browser |
+| `sudo ./launcher uninstall` | Stop and remove launch agent |
+
+### xbar Integration (Optional)
+
+For a menu bar display of power metrics without a GUI app, you can use **xbar**:
+
+#### Installation
+
+```bash
+# Install xbar via Homebrew
+brew install xbar
+
+# Or download from: https://xbarapp.com
+```
+
+#### Setup
+
+```bash
+# Create plugins directory
+mkdir -p ~/Library/Application\ Support/xbar/plugins
+
+# Copy the power metrics plugin
+cp installer/bitbar/power-metrics-simple.sh ~/Library/Application\ Support/xbar/plugins/power-metrics.10s.sh
+
+# Make executable
+chmod +x ~/Library/Application\ Support/xbar/plugins/power-metrics.10s.sh
+```
+
+#### Restart xbar
+
+1. Click the xbar icon in the menu bar
+2. Select "Refresh" or restart xbar
+
+#### Features
+
+The plugin displays:
+- **Menu bar icon**: ⚡ (or 🔥 for high power, 🔋 for low power)
+- **Combined power** in the menu bar (e.g., "⚡ 2.5W")
+- **Dropdown menu** with:
+  - Combined, CPU, GPU, ANE power values
+  - Links to open metrics/health in browser
+  - Options to restart/stop exporter
+  - Auto-refresh every 10 seconds
+
+#### Customization
+
+| File | Description |
+|------|-------------|
+| `installer/xbar/power-metrics.sh` | Full version with colors and more features |
+| `installer/xbar/power-metrics-simple.sh` | Simpler version (no bc required) |
+
+To change refresh rate, rename the file (e.g., `power-metrics.30s.sh` for 30 seconds).
+
+#### Accessing Metrics
+
+Once running, access the metrics at:
+
+| Endpoint | Description |
+|----------|-------------|
+| http://localhost:8080/metrics | Prometheus metrics |
+| http://localhost:8080/health | Health check |
+
+#### Building the DMG from Source
+
+```bash
+# Clone and build
+git clone https://github.com/combust-labs/macos-power-consumption-exporter.git
+cd macos-power-consumption-exporter
+
+# Build unsigned DMG (for development/testing)
+make dmg-unsigned
+
+# The DMG will be created at: dist/MacOS Power Consumption Exporter.dmg
+```
+
+For a signed DMG (for distribution), see the [Signing & Distribution](#signing--distribution) section.
+
+## Usage
+
+### Basic Usage
+
+```bash
+sudo ./macos-power-consumption-exporter
+```
+
+The exporter will start on `http://localhost:8080` by default.
+
+### Custom Address
+
+```bash
+sudo ./macos-power-consumption-exporter -addr :9090
+```
+
+### Command-line Options
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-addr` | `:8080` | HTTP server address |
+| `-log-level` | `info` | Log level (debug, info, warn, error) |
+
+### Makefile Targets
+
+```bash
+make build    # Build the binary
+make test     # Run tests with coverage
+make run      # Build and run (requires sudo)
+make clean    # Clean build artifacts
+```
+
+## Prometheus Configuration
+
+Add a scrape configuration to your `prometheus.yml`:
+
+```yaml
+scrape_configs:
+  - job_name: 'macos-power-usage'
+    static_configs:
+      - targets: ['localhost:8080']
+```
+
+## Exported Metrics
+
+| Metric | Type | Description | Labels |
+|--------|------|-------------|--------|
+| `power_usage_reader_cpu_power` | Gauge | CPU power in milliwatts | hostname |
+| `power_usage_reader_gpu_power` | Gauge | GPU power in milliwatts | hostname |
+| `power_usage_ane_power` | Gauge | Apple Neural Engine power in milliwatts | hostname |
+| `power_usage_combined_power` | Gauge | Combined power (CPU + GPU + ANE) in milliwatts | hostname |
+| `power_usage_reader_restart_count` | Counter | Number of reader restarts | hostname |
+
+## Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `/metrics` | Prometheus metrics endpoint |
+| `/health` | Health check endpoint |
+
+## Architecture
+
+This program contains two main components:
+
+1. **Power Usage Reader** - Reads power metrics from the operating system using `powermetrics` command
+2. **Power Usage Exporter** - HTTP server that exposes metrics to Prometheus
+
+### Data Flow
 
 ```
-CPU Power: 1996 mW
-GPU Power: 324 mW
-ANE Power: 0 mW
-Combined Power (CPU + GPU + ANE): 2320 mW
-GPU Power: 324 mW
+powermetrics → Parser → Prometheus Metrics → HTTP Server → Prometheus
 ```
 
-The reader parses this output and outputs the following metrics:
+## Testing
 
-- `power_usage_reader_cpu_power` - the CPU power usage in milliwatts,
-- `power_usage_reader_gpu` - the GPU power usage in milliwatts,
-- `power_usage_ane_power` - the Apple Neural Engine power usage in milliwatts,
-- `power_usage_combined_power` - the combined power usage in milliwatts.
+```bash
+# Run unit tests
+go test ./...
 
-The second occurrence of the `GPU Power` line can be ignored.
+# Run tests with coverage
+make test
 
-The reader records the samples every time it receives the data using a programming-language-specific
- prometheus metric registry. Metrics capture details like hostname, timestamp, etc.
+# Run specific test
+go test -v ./internal/power_usage_reader/...
+```
 
-2. `power_usage_exporter` - this component exposes the metrics to the Prometheus server. It is a simple HTTP server that serves the metrics at `/metrics` endpoint.
+## Troubleshooting
 
-## This implementation
+### Permission Denied
 
-This version is implemented in Go 1.26.1 programming language. The module is called `github.com/combust-labs/macos-power-consumption-exporter` The program starts both components in the correct order: the reader first, then the exporter. If the reader fails, the program attempts automatic reader component restart. Whenever this happens, the `power_usage_reader_restart_count` metric is incremented.
+The `powermetrics` command requires sudo permissions. Make sure to run the exporter with sudo:
 
-All components are covered by unit and integration tests.
+```bash
+# Command line usage
+sudo ./macos-power-consumption-exporter
+
+# Or via launcher (after DMG install)
+cd "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS"
+sudo ./launcher install
+```
+
+### Port Already in Use
+
+If port 8080 is already in use, specify a different port:
+
+```bash
+sudo ./macos-power-consumption-exporter -addr :8081
+```
+
+### No Metrics Showing
+
+Ensure `powermetrics` is available on your system:
+
+```bash
+sudo powermetrics --help
+```
+
+### Can I Run This in a Container?
+
+**No.** This program cannot run in Docker, Kubernetes, or any container environment because:
+
+- `powermetrics` is a macOS-specific command that requires direct hardware access
+- It accesses CPU, GPU, and ANE power sensors that are not available in containers
+- The program must run directly on a Mac with sudo privileges
+
+## Uninstallation
+
+### Via DMG Installer
+
+If you installed via DMG:
+
+1. Open Finder → Applications
+2. Drag "MacOS Power Consumption Exporter" to Trash
+3. Run the uninstall script (optional but recommended):
+
+```bash
+# Download and run uninstall script
+curl -L -o uninstall.sh https://raw.githubusercontent.com/combust-labs/macos-power-consumption-exporter/main/installer/scripts/uninstall.sh
+chmod +x uninstall.sh
+./uninstall.sh
+```
+
+### Via Command Line
+
+If you installed the binary manually:
+
+```bash
+# Stop the exporter if running
+sudo pkill macos-power-consumption-exporter
+
+# Remove the binary
+sudo rm -f /usr/local/bin/macos-power-consumption-exporter
+```
+
+### What Gets Removed
+
+The uninstall script removes:
+- Application bundle from `/Applications` or `~/Applications`
+- Launch agent (`~/Library/LaunchAgents/com.combust.macos-power-consumption-exporter.plist`)
+- Log files (`~/Library/Logs/com.combust.macos-power-consumption-exporter/`)
+- Cache files (`~/Library/Caches/com.combust.macos-power-consumption-exporter/`)
+- Preference files
+
+## Signing & Distribution
+
+For distribution outside the Mac App Store, you can sign and notarize the app:
+
+### Prerequisites
+
+- Apple Developer ID certificate
+- App-specific password for notarization
+
+### Build Signed DMG
+
+```bash
+# Set your certificate name
+export CERTIFICATE="Developer ID Application: Your Name"
+
+# Build signed DMG
+make dmg
+```
+
+### Full Distribution Build
+
+```bash
+# Set all required environment variables
+export CERTIFICATE="Developer ID Application: Your Name"
+export APPLE_ID="your@email.com"
+export APP_PASSWORD="app-specific-password"
+export TEAM_ID="YOUR_TEAM_ID"
+
+# Build, sign, notarize, and package
+make dist
+```
+
+### Notes
+
+- Unsigned DMGs will trigger Gatekeeper warnings
+- Notarization is required for distribution outside the Mac App Store
+- After notarization, users can run the app without disabling Gatekeeper
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request.
