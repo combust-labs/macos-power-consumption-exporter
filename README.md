@@ -81,6 +81,57 @@ The launcher script supports the following commands:
 | `./launcher open` | Open metrics page in browser |
 | `sudo ./launcher uninstall` | Stop and remove launch agent |
 
+### BitBar/xbar Integration (Optional)
+
+For a menu bar display of power metrics without a GUI app, you can use **BitBar** (formerly xbar):
+
+#### Installation
+
+```bash
+# Install BitBar via Homebrew
+brew install bitbar
+
+# Or download from: https://github.com/matryer/xbar
+```
+
+#### Setup
+
+```bash
+# Create plugins directory
+mkdir -p ~/Library/Application\ Support/BitBar/plugins
+
+# Copy the power metrics plugin
+cp installer/bitbar/power-metrics-simple.sh ~/Library/Application\ Support/BitBar/plugins/power-metrics.10s.sh
+
+# Make executable
+chmod +x ~/Library/Application\ Support/BitBar/plugins/power-metrics.10s.sh
+```
+
+#### Restart BitBar
+
+1. Click the BitBar icon in the menu bar
+2. Select "Refresh" or restart BitBar
+
+#### Features
+
+The plugin displays:
+- **Menu bar icon**: ⚡ (or 🔥 for high power, 🔋 for low power)
+- **Combined power** in the menu bar (e.g., "⚡ 2.5W")
+- **Dropdown menu** with:
+  - Combined, CPU, GPU, ANE power values
+  - Links to open metrics/health in browser
+  - Options to restart/stop exporter
+  - Auto-refresh every 10 seconds
+
+#### Customization
+
+| File | Description |
+|------|-------------|
+| `installer/bitbar/power-metrics.sh` | Full version with colors and more features |
+| `installer/bitbar/power-metrics-simple.sh` | Simpler version (no bc required) |
+
+To change refresh rate, rename the file (e.g., `power-metrics.30s.sh` for 30 seconds).
+
 #### Accessing Metrics
 
 Once running, access the metrics at:
