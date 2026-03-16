@@ -5,6 +5,13 @@ macos-power-consumption-exporter
 *.so
 *.dylib
 
+# Build outputs
+build/
+dist/
+
+# DMG files
+*.dmg
+
 # Test binary
 *.test
 
