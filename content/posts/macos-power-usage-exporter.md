@@ -239,13 +239,16 @@ If you run macOS workloads and want to monitor power consumption, give the expor
 
 ---
 
-### Human Corrections and Guidance
+## Human Corrections and Guidance
 
 The maintainer repeatedly guided or corrected the assistant during the session. Below is a curated list of prompts that explicitly ask the assistant to fix, update, or modify its output. Each entry includes the session file, timestamp, and the correction prompt.
 
 ### pi-session-2026-03-15T22-51-42-220Z_22f50581-3755-4f79-a834-7adf84d98f4c.html
 - **Timestamp:** 2026‑03‑16 03:37:40
+- **Prompt:** "Analyze current the project"
+- **Prompt:** "implement the project"
 - **Prompt:** "Do only once: git add all changes, commit with a descriptive commit, credit yourself as a coauthor, ask what your nickname is to coauthor as."
+- **Prompt:** "mlx-community/MiniMax-M2.5-8bit"
 
 ### pi-session-2026-03-15T23-39-15-936Z_fb35d97a-28da-4da6-b34a-adf06f0cac8f.html
 - **Timestamp:** 2026‑03‑16 03:37:40
