@@ -42,6 +42,120 @@ make build
 
 Download the latest release from the [Releases](https://github.com/combust-labs/macos-power-consumption-exporter/releases) page.
 
+### DMG Installer (Recommended for macOS)
+
+For a native macOS installation experience, download the DMG installer:
+
+1. Download the latest `.dmg` file from [Releases](https://github.com/combust-labs/macos-power-consumption-exporter/releases)
+2. Double-click the DMG to mount it
+3. Drag "MacOS Power Consumption Exporter" to the Applications folder
+4. Run the launcher to start the exporter (see below)
+
+#### Starting the Exporter (After DMG Install)
+
+The application includes a **launcher script** for managing the exporter. Since the app requires elevated privileges to access `powermetrics`, use Terminal to run it:
+
+```bash
+# Navigate to the app bundle
+cd "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS"
+
+# Install and start the exporter (requires admin password)
+sudo ./launcher install
+```
+
+The launcher will:
+- Install a launch agent for auto-start on login
+- Start the exporter immediately
+- Create log files in `~/Library/Logs/com.combust.macos-power-consumption-exporter/`
+
+#### Launcher Commands
+
+The launcher script supports the following commands:
+
+| Command | Description |
+|---------|-------------|
+| `sudo ./launcher install` | Install launch agent and start exporter |
+| `sudo ./launcher start` | Start the exporter |
+| `sudo ./launcher stop` | Stop the exporter |
+| `./launcher status` | Check if exporter is running |
+| `./launcher open` | Open metrics page in browser |
+| `sudo ./launcher uninstall` | Stop and remove launch agent |
+
+### xbar Integration (Optional)
+
+For a menu bar display of power metrics without a GUI app, you can use **xbar**:
+
+#### Installation
+
+```bash
+# Install xbar via Homebrew
+brew install xbar
+
+# Or download from: https://xbarapp.com
+```
+
+#### Setup
+
+```bash
+# Create plugins directory
+mkdir -p ~/Library/Application\ Support/xbar/plugins
+
+# Copy the power metrics plugin
+cp installer/bitbar/power-metrics-simple.sh ~/Library/Application\ Support/xbar/plugins/power-metrics.10s.sh
+
+# Make executable
+chmod +x ~/Library/Application\ Support/xbar/plugins/power-metrics.10s.sh
+```
+
+#### Restart xbar
+
+1. Click the xbar icon in the menu bar
+2. Select "Refresh" or restart xbar
+
+#### Features
+
+The plugin displays:
+- **Menu bar icon**: ⚡ (or 🔥 for high power, 🔋 for low power)
+- **Combined power** in the menu bar (e.g., "⚡ 2.5W")
+- **Dropdown menu** with:
+  - Combined, CPU, GPU, ANE power values
+  - Links to open metrics/health in browser
+  - Options to restart/stop exporter
+  - Auto-refresh every 10 seconds
+
+#### Customization
+
+| File | Description |
+|------|-------------|
+| `installer/xbar/power-metrics.sh` | Full version with colors and more features |
+| `installer/xbar/power-metrics-simple.sh` | Simpler version (no bc required) |
+
+To change refresh rate, rename the file (e.g., `power-metrics.30s.sh` for 30 seconds).
+
+#### Accessing Metrics
+
+Once running, access the metrics at:
+
+| Endpoint | Description |
+|----------|-------------|
+| http://localhost:8080/metrics | Prometheus metrics |
+| http://localhost:8080/health | Health check |
+
+#### Building the DMG from Source
+
+```bash
+# Clone and build
+git clone https://github.com/combust-labs/macos-power-consumption-exporter.git
+cd macos-power-consumption-exporter
+
+# Build unsigned DMG (for development/testing)
+make dmg-unsigned
+
+# The DMG will be created at: dist/MacOS Power Consumption Exporter.dmg
+```
+
+For a signed DMG (for distribution), see the [Signing & Distribution](#signing--distribution) section.
+
 ## Usage
 
 ### Basic Usage
@@ -135,7 +249,12 @@ go test -v ./internal/power_usage_reader/...
 The `powermetrics` command requires sudo permissions. Make sure to run the exporter with sudo:
 
 ```bash
+# Command line usage
 sudo ./macos-power-consumption-exporter
+
+# Or via launcher (after DMG install)
+cd "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS"
+sudo ./launcher install
 ```
 
 ### Port Already in Use
@@ -161,6 +280,82 @@ sudo powermetrics --help
 - `powermetrics` is a macOS-specific command that requires direct hardware access
 - It accesses CPU, GPU, and ANE power sensors that are not available in containers
 - The program must run directly on a Mac with sudo privileges
+
+## Uninstallation
+
+### Via DMG Installer
+
+If you installed via DMG:
+
+1. Open Finder → Applications
+2. Drag "MacOS Power Consumption Exporter" to Trash
+3. Run the uninstall script (optional but recommended):
+
+```bash
+# Download and run uninstall script
+curl -L -o uninstall.sh https://raw.githubusercontent.com/combust-labs/macos-power-consumption-exporter/main/installer/scripts/uninstall.sh
+chmod +x uninstall.sh
+./uninstall.sh
+```
+
+### Via Command Line
+
+If you installed the binary manually:
+
+```bash
+# Stop the exporter if running
+sudo pkill macos-power-consumption-exporter
+
+# Remove the binary
+sudo rm -f /usr/local/bin/macos-power-consumption-exporter
+```
+
+### What Gets Removed
+
+The uninstall script removes:
+- Application bundle from `/Applications` or `~/Applications`
+- Launch agent (`~/Library/LaunchAgents/com.combust.macos-power-consumption-exporter.plist`)
+- Log files (`~/Library/Logs/com.combust.macos-power-consumption-exporter/`)
+- Cache files (`~/Library/Caches/com.combust.macos-power-consumption-exporter/`)
+- Preference files
+
+## Signing & Distribution
+
+For distribution outside the Mac App Store, you can sign and notarize the app:
+
+### Prerequisites
+
+- Apple Developer ID certificate
+- App-specific password for notarization
+
+### Build Signed DMG
+
+```bash
+# Set your certificate name
+export CERTIFICATE="Developer ID Application: Your Name"
+
+# Build signed DMG
+make dmg
+```
+
+### Full Distribution Build
+
+```bash
+# Set all required environment variables
+export CERTIFICATE="Developer ID Application: Your Name"
+export APPLE_ID="your@email.com"
+export APP_PASSWORD="app-specific-password"
+export TEAM_ID="YOUR_TEAM_ID"
+
+# Build, sign, notarize, and package
+make dist
+```
+
+### Notes
+
+- Unsigned DMGs will trigger Gatekeeper warnings
+- Notarization is required for distribution outside the Mac App Store
+- After notarization, users can run the app without disabling Gatekeeper
 
 ## License
 
