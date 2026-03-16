@@ -19,6 +19,8 @@ This program exports the power usage of your macOS device as Prometheus metrics.
 - macOS (required for `powermetrics` command)
 - `sudo` permissions (required for `powermetrics`)
 
+> **Note:** This program cannot run in a container. The `powermetrics` command is a macOS-specific tool that requires direct hardware access to CPU, GPU, and ANE power sensors. It must run directly on a Mac.
+
 ## Installation
 
 ### From Source
@@ -151,6 +153,14 @@ Ensure `powermetrics` is available on your system:
 ```bash
 sudo powermetrics --help
 ```
+
+### Can I Run This in a Container?
+
+**No.** This program cannot run in Docker, Kubernetes, or any container environment because:
+
+- `powermetrics` is a macOS-specific command that requires direct hardware access
+- It accesses CPU, GPU, and ANE power sensors that are not available in containers
+- The program must run directly on a Mac with sudo privileges
 
 ## License
 

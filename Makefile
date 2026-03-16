@@ -21,12 +21,12 @@ LDFLAGS=-ldflags "-X main.Version=$(VERSION) -X main.Commit=$(COMMIT)"
 # Default target
 help:
 	@echo "Available targets:"
-	@echo "  build    - Build the binary"
-	@echo "  test     - Run tests"
-	@echo "  clean    - Clean build artifacts"
-	@echo "  install  - Install dependencies"
-	@echo "  run      - Run the application"
-	@echo "  help     - Show this help message"
+	@echo "  build   - Build the binary"
+	@echo "  test    - Run tests"
+	@echo "  clean   - Clean build artifacts"
+	@echo "  install - Install dependencies"
+	@echo "  run     - Run the application"
+	@echo "  help    - Show this help message"
 
 # Build the binary
 build:
