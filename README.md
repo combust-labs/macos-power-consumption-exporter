@@ -49,9 +49,46 @@ For a native macOS installation experience, download the DMG installer:
 1. Download the latest `.dmg` file from [Releases](https://github.com/combust-labs/macos-power-consumption-exporter/releases)
 2. Double-click the DMG to mount it
 3. Drag "MacOS Power Consumption Exporter" to the Applications folder
-4. Launch the application from Applications
+4. Run the launcher to start the exporter (see below)
 
-The app runs in the menu bar. On first launch, you may be prompted for administrator privileges (required for `powermetrics`).
+#### Starting the Exporter (After DMG Install)
+
+The application includes a **launcher script** for managing the exporter. Since the app requires elevated privileges to access `powermetrics`, use Terminal to run it:
+
+```bash
+# Navigate to the app bundle
+cd "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS"
+
+# Install and start the exporter (requires admin password)
+sudo ./launcher install
+```
+
+The launcher will:
+- Install a launch agent for auto-start on login
+- Start the exporter immediately
+- Create log files in `~/Library/Logs/com.combust.macos-power-consumption-exporter/`
+
+#### Launcher Commands
+
+The launcher script supports the following commands:
+
+| Command | Description |
+|---------|-------------|
+| `sudo ./launcher install` | Install launch agent and start exporter |
+| `sudo ./launcher start` | Start the exporter |
+| `sudo ./launcher stop` | Stop the exporter |
+| `./launcher status` | Check if exporter is running |
+| `./launcher open` | Open metrics page in browser |
+| `sudo ./launcher uninstall` | Stop and remove launch agent |
+
+#### Accessing Metrics
+
+Once running, access the metrics at:
+
+| Endpoint | Description |
+|----------|-------------|
+| http://localhost:8080/metrics | Prometheus metrics |
+| http://localhost:8080/health | Health check |
 
 #### Building the DMG from Source
 
@@ -161,7 +198,12 @@ go test -v ./internal/power_usage_reader/...
 The `powermetrics` command requires sudo permissions. Make sure to run the exporter with sudo:
 
 ```bash
+# Command line usage
 sudo ./macos-power-consumption-exporter
+
+# Or via launcher (after DMG install)
+cd "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS"
+sudo ./launcher install
 ```
 
 ### Port Already in Use
