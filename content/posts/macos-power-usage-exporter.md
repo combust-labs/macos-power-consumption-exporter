@@ -184,7 +184,23 @@ All steps are documented in the README; the above is a condensed cheat‑sheet.
 * **Version flag** – expose `--version` that prints the `Version` and `Commit` set via `-ldflags`.
 * **CI pipeline** – integrate `golangci-lint` and `staticcheck` into the GitHub Actions workflow.
 
-**Lesson:** The iterative prompt‑code‑test loop with MiniMax 2.5 dramatically reduced development friction. The LLM supplied boilerplate quickly, while the human reviewer caught the subtle edge‑cases (duplicate GPU line, graceful shutdown, macOS‑specific build tags). The result is a production‑ready exporter built in a matter of days.
+**Lesson:** The iterative prompt‑code‑test loop with MiniMax 2.5 dramatically reduced development friction. The LLM supplied boilerplate quickly, while the human reviewer caught the subtle edge‑cases (duplicate GPU line, graceful shutdown, macOS‑specific build tags). The result is a production‑ready exporter built in roughly 4–6 hours.
+
+---
+
+## Effort & Required Skills
+
+The entire exporter was prototyped, implemented, and polished in **roughly 4–6 hours** of focused work. The rapid pace was possible thanks to the tight AI‑human loop, but a human developer could achieve the same result with a comparable effort if they possessed the right skill set.
+
+**Skill set needed:**
+* **Go programming** – comfortable with the language, modules, concurrency (`context`, `sync`), and testing.
+* **macOS system knowledge** – familiarity with the `powermetrics` command, its permission model (`sudo`), and interpreting its output.
+* **Prometheus client library** – experience exposing custom metrics, handling gauges, counters, and health endpoints.
+* **Launch agents / service management** – ability to create and manage a `launchd` plist for automatic start‑up on macOS.
+* **CI/CD & testing** – writing unit and integration tests, using `go test`, and setting up a simple CI pipeline.
+* **Basic scripting** – Bash for packaging (Makefile, DMG creation) and optional xBar plugin development.
+
+With these competencies, a developer could independently build, test, and package the exporter in a short sprint, mirroring the timeline achieved with MiniMax 2.5.
 
 ---
 
