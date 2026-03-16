@@ -301,6 +301,17 @@ The maintainer repeatedly guided or corrected the assistant during the session. 
   - "also **update** the previous section mentioning a few days to reflect real values"
   - "**please** add the unsigned DMG for development"
 
+### pi-session-2026-03-16T07-05-34-627Z_cf6f2b9e-d620-4910-8fd7-2949043a668c.html
+- **Timestamp:** 2026‑03‑16 ??
+- **Prompt:** "Summarize current the project"
+- **Prompt:** "You will apply the method from the `.proposals/user-prompt-extraction-proposal.md` file to a pi‑session file. You ask which file to apply the proposal to. You follow instructions from the proposal as closely as possible."
+- **Prompt:** "pi‑session‑2026‑03‑15T22‑51‑42‑220Z_22f50581‑3755‑4f79‑a834‑7adf84d98f4c.html"
+- **Prompt:** "In the blog post file, you maintain the `## Human Corrections and Guidance` section, for the pi‑session file you have just processed, you either create a new `### pi‑session‑<last‑file>` header with the full list, or update the list for that heading by removing duplicates, you always verify that your changes are present in the file using git diff."
+- **Prompt:** "Do only once: git add all new files and changes, commit with a descriptive commit as the maintainer and the agent (you) as a coauthor. Don’t be smart, just add all changes."
+- **Prompt:** "The maintainer is current git user. The agent never updates any git configuration."
+- **Prompt:** "You credit yourself as a nickname. You always ask for the nickname."
+- **Prompt:** "mlx‑community/gpt‑oss‑120b‑MXFP4‑Q8"
+
 These correction prompts highlight the maintainer’s role in steering the project, fixing errors, and ensuring the final documentation and code reflect the intended design.
 
 ---
