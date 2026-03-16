@@ -178,6 +178,31 @@ All steps are documented in the README; the above is a condensed cheat‑sheet.
 ---
 
 ## Future Work & Lessons Learned
+
+* **Cross‑platform guardrails** – add a `//go:build darwin` build tag to the reader package so the code cannot be compiled on Linux/Windows.
+* **Additional metrics** – expose battery charge, temperature, or per‑core power if `powermetrics` ever provides them.
+* **Error counter** – a `reader_errors_total` Prometheus counter would make failure‑rate monitoring easier.
+* **Version flag** – expose `--version` that prints the `Version` and `Commit` set via `-ldflags`.
+* **CI pipeline** – integrate `golangci-lint` and `staticcheck` into the GitHub Actions workflow.
+
+**Lesson:** The iterative prompt‑code‑test loop with MiniMax 2.5 dramatically reduced development friction. The LLM supplied boilerplate quickly, while the human reviewer caught the subtle edge‑cases (duplicate GPU line, graceful shutdown, macOS‑specific build tags). The result is a production‑ready exporter built in roughly 4–6 hours.
+
+---
+
+## Human‑Helped Commits (Examples of Where the Human Assisted)
+
+The following commits were authored by the maintainer and contain **no co‑author attribution**, illustrating moments where human insight and direction were essential:
+
+* **Commit `31822da5…` – *Chat history***
+  * Added an HTML export of the session chat history, preserving the conversation that guided the project.
+* **Commit `0c6a7e91…` – *LLM committed***
+  * Implemented the core macOS Power Usage Prometheus Exporter, establishing the main Go codebase, metrics, and supporting files.
+* **Commit `3af691ed…` – *Human‑generated README.md***
+  * Created the initial `README.md` documenting the purpose, requirements, and high‑level architecture of the exporter.
+
+These commits demonstrate the indispensable role of the maintainer in defining scope, writing documentation, and integrating AI‑generated code into a coherent, production‑ready project.
+
+---
 * **Cross‑platform guardrails** – add a `//go:build darwin` build tag to the reader package so the code cannot be compiled on Linux/Windows.
 * **Additional metrics** – expose battery charge, temperature, or per‑core power if `powermetrics` ever provides them.
 * **Error counter** – a `reader_errors_total` Prometheus counter would make failure‑rate monitoring easier.
