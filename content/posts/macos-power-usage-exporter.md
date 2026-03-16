@@ -236,3 +236,49 @@ We filled a long‑standing gap in macOS observability by delivering a **lightwe
 If you run macOS workloads and want to monitor power consumption, give the exporter a try, drop the xBar plugin into your menu bar, and let Prometheus do the rest.
 
 *Happy monitoring!*
+
+---
+
+## Human Corrections Detected
+
+The maintainer repeatedly guided or corrected the assistant during the session. Below is a curated list of prompts that explicitly ask the assistant to fix, update, or modify its output. Each entry includes the session file, timestamp, and the correction prompt.
+
+### pi-session-2026-03-15T22-51-42-220Z_22f50581-3755-4f79-a834-7adf84d98f4c.html
+- **Timestamp:** 2026‑03‑16 03:37:40
+- **Prompt:** "Do only once: git add all changes, commit with a descriptive commit, credit yourself as a coauthor, ask what your nickname is to coauthor as."
+
+### pi-session-2026-03-15T23-39-15-936Z_fb35d97a-28da-4da6-b34a-adf06f0cac8f.html
+- **Timestamp:** 2026‑03‑16 03:37:40
+- **Prompts:**
+  - "looks better, **please fix** the following error…"
+  - "**no**, you changed the author, **revert** the author…"
+  - "**change** the commit message…"
+  - "**please** document creating the unsigned DMG…"
+  - "**please** document the launcher solution"
+
+### pi-session-2026-03-16T00-06-52-291Z_ad66e00a-866e-4609-aeef-3ddc9d62243a.html
+- **Timestamp:** 2026‑03‑16 03:37:40
+- **Prompt:** "Do only once: git add all changes, commit with a descriptive commit, **credit yourself as a coauthor**…"
+
+### pi-session-2026-03-16T00-24-00-488Z_7f141dd9-dfc2-4a86-a2f0-3bd5b7d25193.html
+- **Timestamp:** 2026‑03‑16 03:37:40
+- **Prompts:**
+  - "**please** document creating the unsigned DMG…"
+  - "trust me, the application is called **xbar**, not BitBar, **please fix**"
+  - "**incorrect** path in `get_status()`"
+  - "**fix** the `power‑metrics‑simple.sh` program…"
+  - "I get an **error**: malformed parameters…"
+  - "**fix** the `power‑metrics‑simple.sh` program re colors and font"
+  - "**please** note missing separator after refresh option"
+
+### pi-session-2026-03-16T02-54-43-989Z_30eae3e3-0373-4c1b-b94e-27c9c8cabb0f.html
+- **Timestamp:** 2026‑03‑16 04:36:11
+- **Prompts:**
+  - "**please** include the following information…"
+  - "the time reported in the post is **incorrect**, **update** the post"
+  - "also **update** the previous section mentioning a few days to reflect real values"
+  - "**please** add the unsigned DMG for development"
+
+These correction prompts highlight the maintainer’s role in steering the project, fixing errors, and ensuring the final documentation and code reflect the intended design.
+
+---
