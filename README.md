@@ -42,6 +42,32 @@ make build
 
 Download the latest release from the [Releases](https://github.com/combust-labs/macos-power-consumption-exporter/releases) page.
 
+### DMG Installer (Recommended for macOS)
+
+For a native macOS installation experience, download the DMG installer:
+
+1. Download the latest `.dmg` file from [Releases](https://github.com/combust-labs/macos-power-consumption-exporter/releases)
+2. Double-click the DMG to mount it
+3. Drag "MacOS Power Consumption Exporter" to the Applications folder
+4. Launch the application from Applications
+
+The app runs in the menu bar. On first launch, you may be prompted for administrator privileges (required for `powermetrics`).
+
+#### Building the DMG from Source
+
+```bash
+# Clone and build
+git clone https://github.com/combust-labs/macos-power-consumption-exporter.git
+cd macos-power-consumption-exporter
+
+# Build unsigned DMG (for development/testing)
+make dmg-unsigned
+
+# The DMG will be created at: dist/MacOS Power Consumption Exporter.dmg
+```
+
+For a signed DMG (for distribution), see the [Signing & Distribution](#signing--distribution) section.
+
 ## Usage
 
 ### Basic Usage
@@ -161,6 +187,82 @@ sudo powermetrics --help
 - `powermetrics` is a macOS-specific command that requires direct hardware access
 - It accesses CPU, GPU, and ANE power sensors that are not available in containers
 - The program must run directly on a Mac with sudo privileges
+
+## Uninstallation
+
+### Via DMG Installer
+
+If you installed via DMG:
+
+1. Open Finder → Applications
+2. Drag "MacOS Power Consumption Exporter" to Trash
+3. Run the uninstall script (optional but recommended):
+
+```bash
+# Download and run uninstall script
+curl -L -o uninstall.sh https://raw.githubusercontent.com/combust-labs/macos-power-consumption-exporter/main/installer/scripts/uninstall.sh
+chmod +x uninstall.sh
+./uninstall.sh
+```
+
+### Via Command Line
+
+If you installed the binary manually:
+
+```bash
+# Stop the exporter if running
+sudo pkill macos-power-consumption-exporter
+
+# Remove the binary
+sudo rm -f /usr/local/bin/macos-power-consumption-exporter
+```
+
+### What Gets Removed
+
+The uninstall script removes:
+- Application bundle from `/Applications` or `~/Applications`
+- Launch agent (`~/Library/LaunchAgents/com.combust.macos-power-consumption-exporter.plist`)
+- Log files (`~/Library/Logs/com.combust.macos-power-consumption-exporter/`)
+- Cache files (`~/Library/Caches/com.combust.macos-power-consumption-exporter/`)
+- Preference files
+
+## Signing & Distribution
+
+For distribution outside the Mac App Store, you can sign and notarize the app:
+
+### Prerequisites
+
+- Apple Developer ID certificate
+- App-specific password for notarization
+
+### Build Signed DMG
+
+```bash
+# Set your certificate name
+export CERTIFICATE="Developer ID Application: Your Name"
+
+# Build signed DMG
+make dmg
+```
+
+### Full Distribution Build
+
+```bash
+# Set all required environment variables
+export CERTIFICATE="Developer ID Application: Your Name"
+export APPLE_ID="your@email.com"
+export APP_PASSWORD="app-specific-password"
+export TEAM_ID="YOUR_TEAM_ID"
+
+# Build, sign, notarize, and package
+make dist
+```
+
+### Notes
+
+- Unsigned DMGs will trigger Gatekeeper warnings
+- Notarization is required for distribution outside the Mac App Store
+- After notarization, users can run the app without disabling Gatekeeper
 
 ## License
 
