@@ -9,7 +9,9 @@
 # 3. chmod +x power-metrics.10s.sh
 # 4. Restart xbar
 
-EXPORTER_URL="http://localhost:8080/metrics"
+EXPORTER_BASE="http://localhost:8080"
+EXPORTER_URL="${EXPORTER_BASE}/metrics"
+HEALTH_ENDPOINT="${EXPORTER_BASE}/health"
 
 # Get combined power
 get_combined() {
@@ -41,7 +43,7 @@ get_ane() {
 
 # Check if exporter is running
 is_running() {
-    curl -s --max-time 2 "$EXPORTER_URL/health" 2>/dev/null | grep -q "OK"
+    curl -s --max-time 2 "$HEALTH_ENDPOINT" 2>/dev/null | grep -q "OK"
 }
 
 # Format power value

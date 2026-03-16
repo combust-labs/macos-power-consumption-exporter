@@ -17,8 +17,9 @@
 # Refresh: This script runs every 10 seconds (change .10s.sh to desired interval)
 
 # Configuration
-EXPORTER_URL="http://localhost:8080/metrics"
-METRICS_ENDPOINT="${EXPORTER_URL}"
+EXPORTER_BASE="http://localhost:8080"
+EXPORTER_URL="${EXPORTER_BASE}/metrics"
+HEALTH_ENDPOINT="${EXPORTER_BASE}/health"
 REFRESH_INTERVAL="10s"
 
 # Colors for output
@@ -71,7 +72,7 @@ format_power() {
 
 # Get status - whether exporter is running
 get_status() {
-    curl -s --max-time 2 "$EXPORTER_URL/health" 2>/dev/null | grep -q "OK" && echo "running" || echo "stopped"
+    curl -s --max-time 2 "$HEALTH_ENDPOINT" 2>/dev/null | grep -q "OK" && echo "running" || echo "stopped"
 }
 
 # Main
