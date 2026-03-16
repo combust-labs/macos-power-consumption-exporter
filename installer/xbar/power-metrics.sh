@@ -132,12 +132,12 @@ main() {
 
     # Output dropdown menu
     echo "---"
-    echo "macOS Power Metrics | font=SF Mono Bold"
+    echo "macOS Power Metrics"
     echo "---"
-    echo "Combined: ${combined_fmt}"
-    echo "CPU: ${cpu_fmt}"
-    echo "GPU: ${gpu_fmt}"
-    echo "ANE: ${ane_fmt}"
+    echo "Combined: ${combined_fmt} | color=#FFFFFF"
+    echo "CPU: ${cpu_fmt} | color=#FFFFFF"
+    echo "GPU: ${gpu_fmt} | color=#FFFFFF"
+    echo "ANE: ${ane_fmt} | color=#FFFFFF"
     echo "---"
     echo "Refresh | refresh=true"
     echo "---"
