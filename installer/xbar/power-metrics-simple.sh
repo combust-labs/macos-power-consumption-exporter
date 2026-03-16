@@ -101,6 +101,7 @@ main() {
     echo "ANE: ${ane_fmt} | color=white"
     echo "---"
     echo "Refresh | refresh=true"
+    echo "---"
     echo "Open Metrics | href=http://localhost:8080/metrics"
     echo "Open Health | href=http://localhost:8080/health"
 }
