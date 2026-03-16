@@ -81,36 +81,36 @@ The launcher script supports the following commands:
 | `./launcher open` | Open metrics page in browser |
 | `sudo ./launcher uninstall` | Stop and remove launch agent |
 
-### BitBar/xbar Integration (Optional)
+### xbar Integration (Optional)
 
-For a menu bar display of power metrics without a GUI app, you can use **BitBar** (formerly xbar):
+For a menu bar display of power metrics without a GUI app, you can use **xbar**:
 
 #### Installation
 
 ```bash
-# Install BitBar via Homebrew
-brew install bitbar
+# Install xbar via Homebrew
+brew install xbar
 
-# Or download from: https://github.com/matryer/xbar
+# Or download from: https://xbarapp.com
 ```
 
 #### Setup
 
 ```bash
 # Create plugins directory
-mkdir -p ~/Library/Application\ Support/BitBar/plugins
+mkdir -p ~/Library/Application\ Support/xbar/plugins
 
 # Copy the power metrics plugin
-cp installer/bitbar/power-metrics-simple.sh ~/Library/Application\ Support/BitBar/plugins/power-metrics.10s.sh
+cp installer/bitbar/power-metrics-simple.sh ~/Library/Application\ Support/xbar/plugins/power-metrics.10s.sh
 
 # Make executable
-chmod +x ~/Library/Application\ Support/BitBar/plugins/power-metrics.10s.sh
+chmod +x ~/Library/Application\ Support/xbar/plugins/power-metrics.10s.sh
 ```
 
-#### Restart BitBar
+#### Restart xbar
 
-1. Click the BitBar icon in the menu bar
-2. Select "Refresh" or restart BitBar
+1. Click the xbar icon in the menu bar
+2. Select "Refresh" or restart xbar
 
 #### Features
 
@@ -127,8 +127,8 @@ The plugin displays:
 
 | File | Description |
 |------|-------------|
-| `installer/bitbar/power-metrics.sh` | Full version with colors and more features |
-| `installer/bitbar/power-metrics-simple.sh` | Simpler version (no bc required) |
+| `installer/xbar/power-metrics.sh` | Full version with colors and more features |
+| `installer/xbar/power-metrics-simple.sh` | Simpler version (no bc required) |
 
 To change refresh rate, rename the file (e.g., `power-metrics.30s.sh` for 30 seconds).
 

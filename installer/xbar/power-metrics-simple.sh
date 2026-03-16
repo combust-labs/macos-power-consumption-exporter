@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# BitBar/xbar extension - Simple Version (no bc required)
+# xbar extension - Simple Version (no bc required)
 # Displays current power metrics in the menu bar
 #
 # Installation:
-# 1. Install BitBar: brew install bitbar
-# 2. Copy to: ~/Library/Application\ Support/BitBar/plugins/power-metrics.10s.sh
+# 1. Install xbar: brew install xbar
+# 2. Copy to: ~/Library/Application\ Support/xbar/plugins/power-metrics.10s.sh
 # 3. chmod +x power-metrics.10s.sh
-# 4. Restart BitBar
+# 4. Restart xbar
 
 EXPORTER_URL="http://localhost:8080/metrics"
 

@@ -1,18 +1,18 @@
 #!/bin/bash
 #
-# BitBar/xbar extension for macOS Power Consumption Exporter
+# xbar extension for macOS Power Consumption Exporter
 # Displays current power metrics in the menu bar
 #
 # Requirements:
-# - BitBar app installed: https://github.com/matryer/xbar
+# - xbar app installed: https://xbarapp.com
 # - Power exporter running on localhost:8080
 #
 # Installation:
-# 1. Install BitBar: brew install bitbar
-# 2. Create plugins folder: mkdir -p ~/Library/Application\ Support/BitBar/plugins
-# 3. Copy this script to: ~/Library/Application\ Support/BitBar/plugins/power-metrics.10s.sh
+# 1. Install xbar: brew install xbar
+# 2. Create plugins folder: mkdir -p ~/Library/Application\ Support/xbar/plugins
+# 3. Copy this script to: ~/Library/Application\ Support/xbar/plugins/power-metrics.10s.sh
 # 4. Make executable: chmod +x power-metrics.10s.sh
-# 5. Restart BitBar
+# 5. Restart xbar
 #
 # Refresh: This script runs every 10 seconds (change .10s.sh to desired interval)
 
