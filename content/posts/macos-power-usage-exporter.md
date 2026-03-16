@@ -239,7 +239,7 @@ If you run macOS workloads and want to monitor power consumption, give the expor
 
 ---
 
-## Human Corrections Detected
+### Human Corrections and Guidance
 
 The maintainer repeatedly guided or corrected the assistant during the session. Below is a curated list of prompts that explicitly ask the assistant to fix, update, or modify its output. Each entry includes the session file, timestamp, and the correction prompt.
 
@@ -263,13 +263,32 @@ The maintainer repeatedly guided or corrected the assistant during the session. 
 ### pi-session-2026-03-16T00-24-00-488Z_7f141dd9-dfc2-4a86-a2f0-3bd5b7d25193.html
 - **Timestamp:** 2026‑03‑16 03:37:40
 - **Prompts:**
-  - "**please** document creating the unsigned DMG…"
-  - "trust me, the application is called **xbar**, not BitBar, **please fix**"
-  - "**incorrect** path in `get_status()`"
-  - "**fix** the `power‑metrics‑simple.sh` program…"
-  - "I get an **error**: malformed parameters…"
-  - "**fix** the `power‑metrics‑simple.sh` program re colors and font"
-  - "**please** note missing separator after refresh option"
+  - "Analyze current the project"
+  - "create a proposal for how to create a dmg installer for this application, write to to a proposal file"
+  - "go on then, implement"
+  - "Add build/ and dist/ directories to .gitignore"
+  - "Do only once: git add all new files and changes, commit with a descriptive commit as the maintainer and the agent (you) as a coauthor.  Don't be smart, just add all changes."
+  - "The maintainer is current git user. The agent never updates any git configuration."
+  - "You credit yourself as a nickname. You always ask for the nickname."
+  - "mlx-community/MiniMax-M2.5-8bit"
+  - "please document creating the unsigned DMG for development, and document how to uninstall the application, better - create an uniinstall script"
+  - "explain to me how do I start the app after installing the mdg"
+  - "explain to me how do I start the app after installing the unsigned dmg"
+  - "nothing happens when I double-click"
+  - "please document the launcher solution"
+  - "is it possible to build an xbar extension which displays an icon, and when clicked, it shows the output of a http call and read out power metrics"
+  - "trust me, the application is called xbar, not BitBar, please fix"
+  - "power-metrics.sh program contains an incorrect path in get_status() function, health is available at `/health`, not `/metrics/health`"
+  - "make the program executable and run it, it fails to run"
+  - "cpower-metrics.sh, not the simple one, uses undefined variable in get_metrics, fix it"
+  - "I get an error: malformed parameters, missing equals when the script runs inside of the app"
+  - "I have identified the problem, restore colors, don't use font"
+  - "color is not there"
+  - "stop being so proactive, you have to use the color name instead of the hex code"
+  - "why didn't you just say that the default was white and that's why you removed it?"
+  - "fix the power-metrics-simple.sh program re colors and font"
+  - "please note missing separator after refresh option"
+  - "add `make help` target"
 
 ### pi-session-2026-03-16T02-54-43-989Z_30eae3e3-0373-4c1b-b94e-27c9c8cabb0f.html
 - **Timestamp:** 2026‑03‑16 04:36:11

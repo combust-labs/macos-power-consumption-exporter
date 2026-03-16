@@ -23,14 +23,20 @@ Provide a reliable, reproducible method to extract **all** user prompts (maintai
 Four complementary ways are offered:
 
 1. **Human‑driven file selection & Base64 extraction** – the agent first asks the operator which Pi‑session HTML file should be processed. The operator supplies the full path (e.g. `~/Downloads/pi‑session‑2026‑03‑15T22‑51‑42‑220Z_22f50581-3755-4f79-a834-7adf84d98f4c.html`). The agent then runs:
-   ```bash
-   # Extract the Base64 payload from the <script> tag
-   perl -0777 -ne 'if (/<script id="session-data"[^>]*>(.*?)<\/script>/s) { print $1 }' "$SELECTED_FILE" > /tmp/session_base64.txt
 
-   # Decode it to plain JSON
+  Extract the Base64 payload from the `<script>` tag, use the command on the file
+
+   ```bash
+   perl -0777 -ne 'if (/<script id="session-data"[^>]*>(.*?)<\/script>/s) { print $1 }' "$SELECTED_FILE" > /tmp/session_base64.txt
+   ```
+   Decode it to plain JSON
+
+   ```bash
    base64 -d /tmp/session_base64.txt > /tmp/session_base64-decoded.txt
    ```
+
    After these commands the JSON payload is available at **`/tmp/session_base64-decoded.txt`** and all subsequent steps work on that file.
+   
 2. **`jq` one‑liner** – the preferred, concise solution using the JSON query tool.
 3. **Python script** – for environments where `jq` is unavailable but Python is present.
 4. **Pure Bash/grep** – a fallback when neither `jq` nor Python can be installed.
