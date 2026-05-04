@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -13,25 +15,39 @@ import (
 
 // Config holds the exporter configuration
 type Config struct {
-	Addr string
+	Addr           string
+	AuthHeaderFile string
 }
 
 // PowerUsageExporter exposes power metrics via HTTP
 type PowerUsageExporter struct {
-	config *Config
-	server *http.Server
-	listener net.Listener
+	config    *Config
+	server    *http.Server
+	listener  net.Listener
+	authToken string
 }
 
 // New creates a new PowerUsageExporter
-func New(config *Config) *PowerUsageExporter {
+func New(config *Config) (*PowerUsageExporter, error) {
 	if config.Addr == "" {
 		config.Addr = ":8080"
 	}
 
-	return &PowerUsageExporter{
+	exporter := &PowerUsageExporter{
 		config: config,
 	}
+
+	// Load auth token if configured
+	if config.AuthHeaderFile != "" {
+		token, err := os.ReadFile(config.AuthHeaderFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read auth header file: %w", err)
+		}
+		exporter.authToken = strings.TrimSpace(string(token))
+		log.Info().Str("auth-header-file", config.AuthHeaderFile).Msg("auth enabled for /metrics endpoint")
+	}
+
+	return exporter, nil
 }
 
 // Start starts the HTTP server
@@ -46,9 +62,16 @@ func (e *PowerUsageExporter) Start(ctx context.Context) error {
 	e.listener = ln
 
 	mux := http.NewServeMux()
-	mux.Handle("/metrics", promhttp.Handler())
 
-	// Add health check endpoint
+	// Wrap /metrics with auth if configured
+	if e.authToken != "" {
+		metricsHandler := promhttp.Handler()
+		mux.Handle("/metrics", authMiddleware(metricsHandler, e.authToken))
+	} else {
+		mux.Handle("/metrics", promhttp.Handler())
+	}
+
+	// Add health check endpoint (no auth required)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "OK\n")
@@ -95,4 +118,18 @@ func (e *PowerUsageExporter) Addr() string {
 		return e.listener.Addr().String()
 	}
 	return e.config.Addr
+}
+
+// authMiddleware wraps an http.Handler to require Bearer token authentication
+func authMiddleware(next http.Handler, token string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		expected := "Bearer " + token
+		if authHeader != expected {
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprintf(w, "Unauthorized\n")
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

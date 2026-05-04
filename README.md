@@ -197,6 +197,7 @@ make launchdaemon-logs       # View recent logs
 |------|---------|-------------|
 | `-addr` | `:8080` | HTTP server address |
 | `-log-level` | `info` | Log level (debug, info, warn, error) |
+| `-auth-header-file` | `` | Path to file containing auth token (enables Bearer token auth on /metrics) |
 
 ### Makefile Targets
 
@@ -214,9 +215,12 @@ Add a scrape configuration to your `prometheus.yml`:
 ```yaml
 scrape_configs:
   - job_name: 'macos-power-usage'
+    bearer_token: 'my-secret-token'
     static_configs:
       - targets: ['localhost:8080']
 ```
+
+If using authentication, configure the `bearer_token` in your Prometheus scrape config to match the token in your token file.
 
 ## Exported Metrics
 
@@ -232,8 +236,32 @@ scrape_configs:
 
 | Endpoint | Description |
 |----------|-------------|
-| `/metrics` | Prometheus metrics endpoint |
-| `/health` | Health check endpoint |
+| `/metrics` | Prometheus metrics endpoint (protected by auth if configured) |
+| `/health` | Health check endpoint (always public) |
+
+## Bearer Token Authentication
+
+Optionally protect the `/metrics` endpoint with Bearer token authentication:
+
+```bash
+# Create a token file
+echo "my-secret-token" > /path/to/token.txt
+
+# Run with auth enabled
+sudo ./macos-power-consumption-exporter --auth-header-file /path/to/token.txt
+```
+
+**Accessing protected metrics:**
+```bash
+# With token
+curl -H "Authorization: Bearer my-secret-token" http://localhost:8080/metrics
+
+# Without token (returns 401 Unauthorized)
+curl http://localhost:8080/metrics
+```
+
+The `/health` endpoint remains unauthenticated.
+
 
 ## Architecture
 
