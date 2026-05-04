@@ -28,6 +28,7 @@ func main() {
 	// Parse flags
 	exporterAddr := flag.String("addr", ":8080", "HTTP server address")
 	logLevel := flag.String("log-level", "info", "Log level (debug, info, warn, error)")
+	authHeaderFile := flag.String("auth-header-file", "", "Path to file containing auth token (enables auth on /metrics)")
 	flag.Parse()
 
 	// Set up logging
@@ -59,9 +60,13 @@ func main() {
 	}()
 
 	// Create and start the exporter
-	exporter := power_usage_exporter.New(&power_usage_exporter.Config{
-		Addr: *exporterAddr,
+	exporter, err := power_usage_exporter.New(&power_usage_exporter.Config{
+		Addr:           *exporterAddr,
+		AuthHeaderFile: *authHeaderFile,
 	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to create exporter")
+	}
 
 	if err := exporter.Start(ctx); err != nil {
 		log.Fatal().Err(err).Msg("failed to start exporter")
