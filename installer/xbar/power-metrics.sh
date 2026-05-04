@@ -5,7 +5,7 @@
 #
 # Requirements:
 # - xbar app installed: https://xbarapp.com
-# - Power exporter running on localhost:8080
+# - Power exporter running (default port 8080)
 #
 # Installation:
 # 1. Install xbar: brew install xbar
@@ -15,9 +15,19 @@
 # 5. Restart xbar
 #
 # Refresh: This script runs every 10 seconds (change .10s.sh to desired interval)
+#
+# Configuration:
+# - Set custom port file location via EXPORTER_PORT_FILE env var
+# - Set explicit port via EXPORTER_PORT env var (overrides port file)
+# - Default port file: ~/.macos-power-consumption-exporter-port-file
+
+# Determine port
+: "${EXPORTER_PORT_FILE:=$HOME/.macos-power-consumption-exporter-port-file}"
+PORT="${EXPORTER_PORT:-$(cat "$EXPORTER_PORT_FILE" 2>/dev/null)}"
+PORT="${PORT:-8080}"  # fallback to default
 
 # Configuration
-EXPORTER_BASE="http://localhost:8080"
+EXPORTER_BASE="http://localhost:${PORT}"
 EXPORTER_URL="${EXPORTER_BASE}/metrics"
 METRICS_ENDPOINT="${EXPORTER_URL}"
 HEALTH_ENDPOINT="${EXPORTER_BASE}/health"
@@ -86,7 +96,7 @@ main() {
         echo "⚠️ Power"
         echo "---"
         echo "Exporter not running | color=red"
-        echo "Click to start... | bash='open' param='http://localhost:8080/metrics'"
+        echo "Click to start... | bash='open' param='${EXPORTER_BASE}/metrics'"
         exit 0
     fi
 
@@ -141,8 +151,8 @@ main() {
     echo "---"
     echo "Refresh | refresh=true"
     echo "---"
-    echo "Open Metrics | href=http://localhost:8080/metrics"
-    echo "Open Health | href=http://localhost:8080/health"
+    echo "Open Metrics | href=${EXPORTER_BASE}/metrics"
+    echo "Open Health | href=${EXPORTER_BASE}/health"
 }
 
 main "$@"

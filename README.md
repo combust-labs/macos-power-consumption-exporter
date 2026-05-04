@@ -115,6 +115,23 @@ The plugin displays:
 
 To change refresh rate, rename the file (e.g., `power-metrics.30s.sh` for 30 seconds).
 
+#### Shell Configuration for xbar
+
+If using ephemeral port mode, configure your shell to tell the xbar plugin where to find the port file. Add to your `~/.bashrc`, `~/.bash_profile`, or `~/.zshrc`:
+
+```bash
+# Set the port file location for xbar plugins (ephemeral port mode)
+export EXPORTER_PORT_FILE="$HOME/.macos-power-consumption-exporter-port-file"
+```
+
+Or set an explicit port (overrides port file):
+```bash
+# Use a fixed port instead of reading from port file
+export EXPORTER_PORT=8080
+```
+
+The xbar plugin will automatically use these environment variables to find the exporter.
+
 #### Accessing Metrics
 
 Once running, access the metrics at:
@@ -155,6 +172,38 @@ The exporter will start on `http://localhost:8080` by default.
 sudo ./macos-power-consumption-exporter -addr :9090
 ```
 
+### Ephemeral Port (Dynamic Port Selection)
+
+If you want the exporter to automatically select an available port (useful for avoiding conflicts or running multiple instances), use `-addr :0`:
+
+```bash
+sudo ./macos-power-consumption-exporter -addr :0
+```
+
+When using ephemeral port mode:
+- A random available port in the range 8000-9000 is selected
+- The port number is written to `~/.macos-power-consumption-exporter-port-file`
+- The port file is removed when the exporter stops gracefully
+
+**Read the assigned port:**
+```bash
+cat ~/.macos-power-consumption-exporter-port-file
+# Output: 8421
+```
+
+**Custom port range:**
+```bash
+sudo ./macos-power-consumption-exporter -addr :0 \
+  -port-range-start 9000 \
+  -port-range-end 9100
+```
+
+**With custom port file location:**
+```bash
+sudo ./macos-power-consumption-exporter -addr :0 \
+  -port-file /tmp/my-exporter-port.txt
+```
+
 ### Auto-Start at Boot (LaunchDaemon)
 
 For automatic startup when the system boots (runs as root), use the LaunchDaemon approach:
@@ -173,7 +222,12 @@ sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchda
 sudo make launchdaemon-install
 
 # Or with custom options
-sudo EXPORTER_PORT=9090 LOG_LEVEL=debug make launchdaemon-install
+sudo EXPORTER_ADDR=:9090 LOG_LEVEL=debug make launchdaemon-install
+
+# Or use ephemeral port mode
+sudo EXPORTER_ADDR=:0 \
+     EXPORTER_PORT_FILE=$HOME/.macos-power-exporter-port.txt \
+     make launchdaemon-install
 ```
 
 #### LaunchDaemon Management
@@ -205,9 +259,25 @@ make launchdaemon-logs       # View recent logs
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `-addr` | `:8080` | HTTP server address |
+| `-addr` | `:8080` | HTTP server address (use `:0` for ephemeral port) |
 | `-log-level` | `info` | Log level (debug, info, warn, error) |
 | `-auth-header-file` | `` | Path to file containing auth token (enables Bearer token auth on /metrics) |
+| `-port-file` | `~/.macos-power-consumption-exporter-port-file` | Path to file for ephemeral port (use with `-addr :0`) |
+| `-port-range-start` | `8000` | Start of port range for ephemeral binding |
+| `-port-range-end` | `9000` | End of port range for ephemeral binding |
+
+### Environment Variables
+
+The following environment variables are supported:
+
+| Env Variable | Default | Description |
+|-------------|---------|-------------|
+| `EXPORTER_ADDR` | `:8080` | Same as `-addr` flag |
+| `EXPORTER_PORT_FILE` | `~/.macos-power-consumption-exporter-port-file` | Same as `-port-file` flag |
+| `EXPORTER_PORT_RANGE_START` | `8000` | Same as `-port-range-start` flag |
+| `EXPORTER_PORT_RANGE_END` | `9000` | Same as `-port-range-end` flag |
+
+Environment variables are used as defaults when the corresponding flags are not specified.
 
 ### Makefile Targets
 
@@ -320,6 +390,33 @@ If port 8080 is already in use, specify a different port:
 ```bash
 sudo ./macos-power-consumption-exporter -addr :8081
 ```
+
+Or use ephemeral port mode (`:0`) to automatically select an available port:
+
+```bash
+sudo ./macos-power-consumption-exporter -addr :0
+```
+
+### Port File Missing (Ephemeral Port Mode)
+
+If using ephemeral port mode and the xbar plugin shows "N/A":
+
+1. Check if the exporter is running with ephemeral port:
+   ```bash
+   cat ~/.macos-power-consumption-exporter-port-file
+   ```
+
+2. If the file doesn't exist, the exporter may not be running in ephemeral mode, or it was stopped gracefully
+
+3. Set the `EXPORTER_PORT_FILE` environment variable to the correct path if using a custom location:
+   ```bash
+   export EXPORTER_PORT_FILE="$HOME/.macos-power-consumption-exporter-port-file"
+   ```
+
+4. Or set an explicit port that matches your exporter:
+   ```bash
+   export EXPORTER_PORT=8421
+   ```
 
 ### No Metrics Showing
 

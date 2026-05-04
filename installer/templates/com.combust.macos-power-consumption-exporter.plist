@@ -26,6 +26,12 @@
     <dict>
         <key>PATH</key>
         <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>EXPORTER_PORT_FILE</key>
+        <string>{{PORT_FILE}}</string>
+        <key>EXPORTER_PORT_RANGE_START</key>
+        <string>{{PORT_RANGE_START}}</string>
+        <key>EXPORTER_PORT_RANGE_END</key>
+        <string>{{PORT_RANGE_END}}</string>
     </dict>
 </dict>
 </plist>

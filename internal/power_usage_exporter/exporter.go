@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -17,6 +18,9 @@ import (
 type Config struct {
 	Addr           string
 	AuthHeaderFile string
+	PortFile       string
+	PortRangeStart int
+	PortRangeEnd   int
 }
 
 // PowerUsageExporter exposes power metrics via HTTP
@@ -25,6 +29,7 @@ type PowerUsageExporter struct {
 	server    *http.Server
 	listener  net.Listener
 	authToken string
+	portFile  string
 }
 
 // New creates a new PowerUsageExporter
@@ -35,6 +40,11 @@ func New(config *Config) (*PowerUsageExporter, error) {
 
 	exporter := &PowerUsageExporter{
 		config: config,
+	}
+
+	// Expand tilde in port file path
+	if config.PortFile != "" {
+		exporter.portFile = expandPortFilePath(config.PortFile)
 	}
 
 	// Load auth token if configured
@@ -54,11 +64,35 @@ func New(config *Config) (*PowerUsageExporter, error) {
 func (e *PowerUsageExporter) Start(ctx context.Context) error {
 	log.Info().Str("addr", e.config.Addr).Msg("starting power usage exporter")
 
-	// Create listener
-	ln, err := net.Listen("tcp", e.config.Addr)
-	if err != nil {
-		return fmt.Errorf("failed to create listener: %w", err)
+	// Create listener (handle :0 for ephemeral port)
+	var ln net.Listener
+	var err error
+
+	if e.config.Addr == ":0" {
+		port, err := e.findAvailablePort(e.config.PortRangeStart, e.config.PortRangeEnd)
+		if err != nil {
+			return fmt.Errorf("failed to find available port: %w", err)
+		}
+		ln, err = net.Listen("tcp", fmt.Sprintf(":%d", port))
+		if err != nil {
+			return fmt.Errorf("failed to create listener on ephemeral port: %w", err)
+		}
+		log.Info().Int("port", port).Msg("bound to ephemeral port")
+
+		// Write port to file
+		if e.portFile != "" {
+			if err := e.writePortFile(port); err != nil {
+				ln.Close()
+				return fmt.Errorf("failed to write port file: %w", err)
+			}
+		}
+	} else {
+		ln, err = net.Listen("tcp", e.config.Addr)
+		if err != nil {
+			return fmt.Errorf("failed to create listener: %w", err)
+		}
 	}
+
 	e.listener = ln
 
 	mux := http.NewServeMux()
@@ -108,6 +142,13 @@ func (e *PowerUsageExporter) Stop() error {
 		return err
 	}
 
+	// Clean up port file if it was created
+	if e.portFile != "" {
+		if err := e.removePortFile(); err != nil {
+			log.Warn().Err(err).Msg("failed to remove port file")
+		}
+	}
+
 	log.Info().Msg("power usage exporter stopped")
 	return nil
 }
@@ -132,4 +173,48 @@ func authMiddleware(next http.Handler, token string) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// findAvailablePort searches for an available port in the given range
+func (e *PowerUsageExporter) findAvailablePort(start, end int) (int, error) {
+	for port := start; port <= end; port++ {
+		ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+		if err != nil {
+			// Port is in use, try next
+			continue
+		}
+		ln.Close() // We just need to verify it's available
+		return port, nil
+	}
+	return 0, fmt.Errorf("no available ports in range %d-%d", start, end)
+}
+
+// expandPortFilePath expands ~ to the user's home directory
+func expandPortFilePath(path string) string {
+	if strings.HasPrefix(path, "~/") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return path
+		}
+		return filepath.Join(home, path[2:])
+	}
+	return path
+}
+
+// writePortFile writes the port number to the port file
+func (e *PowerUsageExporter) writePortFile(port int) error {
+	log.Info().Str("port-file", e.portFile).Int("port", port).Msg("writing port to file")
+	if err := os.WriteFile(e.portFile, []byte(fmt.Sprintf("%d\n", port)), 0600); err != nil {
+		return fmt.Errorf("failed to write port file: %w", err)
+	}
+	return nil
+}
+
+// removePortFile removes the port file
+func (e *PowerUsageExporter) removePortFile() error {
+	log.Info().Str("port-file", e.portFile).Msg("removing port file")
+	if err := os.Remove(e.portFile); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove port file: %w", err)
+	}
+	return nil
 }

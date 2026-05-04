@@ -45,6 +45,8 @@ help:
 	@echo "  launchdaemon-stop      - Stop the LaunchDaemon"
 	@echo "  launchdaemon-status    - Show LaunchDaemon status"
 	@echo "  launchdaemon-logs      - Show recent logs"
+	@echo ""
+	@echo "  Ephemeral port: sudo EXPORTER_ADDR=:0 make launchdaemon-install"
 
 # Build the binary
 build:

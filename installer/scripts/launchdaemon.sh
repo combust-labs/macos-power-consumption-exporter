@@ -9,7 +9,10 @@ set -e
 # Configuration
 DAEMON_LABEL="com.combust.macos-power-consumption-exporter"
 DAEMON_PLIST="/Library/LaunchDaemons/${DAEMON_LABEL}.plist"
-EXPORTER_PORT="${EXPORTER_PORT:-8080}"
+EXPORTER_ADDR="${EXPORTER_ADDR:-:8080}"
+EXPORTER_PORT_FILE="${EXPORTER_PORT_FILE:-}"
+EXPORTER_PORT_RANGE_START="${EXPORTER_PORT_RANGE_START:-8000}"
+EXPORTER_PORT_RANGE_END="${EXPORTER_PORT_RANGE_END:-9000}"
 LOG_LEVEL="${LOG_LEVEL:-info}"
 
 # Colors for output
@@ -86,6 +89,20 @@ install() {
     
     # Create the plist content directly (no external template needed)
     local plist_content
+    
+    # Build environment variables section
+    local env_vars=""
+    env_vars+="        <key>PATH</key>\n"
+    env_vars+="        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>\n"
+    if [ -n "$EXPORTER_PORT_FILE" ]; then
+        env_vars+="        <key>EXPORTER_PORT_FILE</key>\n"
+        env_vars+="        <string>${EXPORTER_PORT_FILE}</string>\n"
+    fi
+    env_vars+="        <key>EXPORTER_PORT_RANGE_START</key>\n"
+    env_vars+="        <string>${EXPORTER_PORT_RANGE_START}</string>\n"
+    env_vars+="        <key>EXPORTER_PORT_RANGE_END</key>\n"
+    env_vars+="        <string>${EXPORTER_PORT_RANGE_END}</string>\n"
+    
     plist_content=$(cat << PLIST_EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -97,7 +114,7 @@ install() {
     <array>
         <string>${binary_path}</string>
         <string>-addr</string>
-        <string>:${EXPORTER_PORT}</string>
+        <string>${EXPORTER_ADDR}</string>
         <string>-log-level</string>
         <string>${LOG_LEVEL}</string>
     </array>
@@ -113,9 +130,7 @@ install() {
     <string>Background</string>
     <key>EnvironmentVariables</key>
     <dict>
-        <key>PATH</key>
-        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
-    </dict>
+${env_vars}    </dict>
 </dict>
 </plist>
 PLIST_EOF
@@ -134,12 +149,15 @@ PLIST_EOF
     log_info "LaunchDaemon loaded and will start at next boot"
     log_info ""
     log_info "The exporter will automatically start when the system boots."
-    log_info "Access metrics at: http://localhost:${EXPORTER_PORT}/metrics"
-    log_info "Health check at:   http://localhost:${EXPORTER_PORT}/health"
+    log_info "Access metrics at: http://localhost${EXPORTER_ADDR}/metrics"
+    log_info "Health check at:   http://localhost${EXPORTER_ADDR}/health"
     log_info ""
     log_info "Logs are available at:"
     log_info "  /var/log/combust-macos-power-consumption-exporter.log"
     log_info "  /var/log/combust-macos-power-consumption-exporter.error.log"
+    if [ "$EXPORTER_ADDR" = ":0" ]; then
+        log_info "Port file: ${EXPORTER_PORT_FILE:-~/.macos-power-consumption-exporter-port-file}"
+    fi
 }
 
 # Uninstall the LaunchDaemon
@@ -205,8 +223,8 @@ status() {
     if [ -n "$pid" ] && [ "$pid" != "-" ]; then
         log_info "LaunchDaemon is running (PID: $pid)"
         echo ""
-        echo "Metrics:     http://localhost:${EXPORTER_PORT}/metrics"
-        echo "Health:      http://localhost:${EXPORTER_PORT}/health"
+        echo "Address:     http://localhost${EXPORTER_ADDR}/metrics"
+        echo "Health:      http://localhost${EXPORTER_ADDR}/health"
         echo "Log (out):   /var/log/combust-macos-power-consumption-exporter.log"
         echo "Log (err):   /var/log/combust-macos-power-consumption-exporter.error.log"
     else
@@ -239,13 +257,22 @@ usage() {
     echo "  logs       Show recent log output"
     echo ""
     echo "Environment variables:"
-    echo "  EXPORTER_PORT    Port for the HTTP server (default: 8080)"
-    echo "  LOG_LEVEL        Log level: debug, info, warn, error (default: info)"
+    echo "  EXPORTER_ADDR            Address for the HTTP server (default: :8080)"
+    echo "                           Use ':0' for ephemeral port selection"
+    echo "  EXPORTER_PORT_FILE       Path to port file for ephemeral mode"
+    echo "  EXPORTER_PORT_RANGE_START Start of port range for ephemeral (default: 8000)"
+    echo "  EXPORTER_PORT_RANGE_END   End of port range for ephemeral (default: 9000)"
+    echo "  LOG_LEVEL                Log level: debug, info, warn, error (default: info)"
     echo ""
     echo "Examples:"
     echo "  sudo ./launchdaemon.sh install"
-    echo "  sudo EXPORTER_PORT=9090 ./launchdaemon.sh install"
+    echo "  sudo EXPORTER_ADDR=:9090 ./launchdaemon.sh install"
     echo "  sudo LOG_LEVEL=debug ./launchdaemon.sh install"
+    echo ""
+    echo "Ephemeral port mode (random available port, written to file):"
+    echo "  sudo EXPORTER_ADDR=:0 \\"
+    echo "       EXPORTER_PORT_FILE=$HOME/.macos-power-exporter-port.txt \\"
+    echo "       ./launchdaemon.sh install"
 }
 
 # Main

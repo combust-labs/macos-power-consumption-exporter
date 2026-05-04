@@ -8,8 +8,18 @@
 # 2. Copy to: ~/Library/Application\ Support/xbar/plugins/power-metrics.10s.sh
 # 3. chmod +x power-metrics.10s.sh
 # 4. Restart xbar
+#
+# Configuration:
+# - Set custom port file location via EXPORTER_PORT_FILE env var
+# - Set explicit port via EXPORTER_PORT env var (overrides port file)
+# - Default port file: ~/.macos-power-consumption-exporter-port-file
 
-EXPORTER_BASE="http://localhost:8080"
+# Determine port
+: "${EXPORTER_PORT_FILE:=$HOME/.macos-power-consumption-exporter-port-file}"
+PORT="${EXPORTER_PORT:-$(cat "$EXPORTER_PORT_FILE" 2>/dev/null)}"
+PORT="${PORT:-8080}"  # fallback to default
+
+EXPORTER_BASE="http://localhost:${PORT}"
 EXPORTER_URL="${EXPORTER_BASE}/metrics"
 HEALTH_ENDPOINT="${EXPORTER_BASE}/health"
 
@@ -102,8 +112,8 @@ main() {
     echo "---"
     echo "Refresh | refresh=true"
     echo "---"
-    echo "Open Metrics | href=http://localhost:8080/metrics"
-    echo "Open Health | href=http://localhost:8080/health"
+    echo "Open Metrics | href=${EXPORTER_BASE}/metrics"
+    echo "Open Health | href=${EXPORTER_BASE}/health"
 }
 
 main "$@"

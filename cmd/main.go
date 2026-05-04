@@ -22,13 +22,26 @@ var (
 
 	// Commit is set at build time
 	Commit = "unknown"
+
+	// Default port file path
+	defaultPortFile = "$HOME/.macos-power-consumption-exporter-port-file"
 )
+
+func getEnvOrDefault(key, defaultVal string) string {
+	if val := os.Getenv(key); val != "" {
+		return val
+	}
+	return defaultVal
+}
 
 func main() {
 	// Parse flags
 	exporterAddr := flag.String("addr", ":8080", "HTTP server address")
 	logLevel := flag.String("log-level", "info", "Log level (debug, info, warn, error)")
 	authHeaderFile := flag.String("auth-header-file", "", "Path to file containing auth token (enables auth on /metrics)")
+	portFile := flag.String("port-file", getEnvOrDefault("EXPORTER_PORT_FILE", defaultPortFile), "Path to file for ephemeral port (use with -addr :0)")
+	portRangeStart := flag.Int("port-range-start", 8000, "Start of port range for ephemeral binding")
+	portRangeEnd := flag.Int("port-range-end", 9000, "End of port range for ephemeral binding")
 	flag.Parse()
 
 	// Set up logging
@@ -63,6 +76,9 @@ func main() {
 	exporter, err := power_usage_exporter.New(&power_usage_exporter.Config{
 		Addr:           *exporterAddr,
 		AuthHeaderFile: *authHeaderFile,
+		PortFile:       *portFile,
+		PortRangeStart: *portRangeStart,
+		PortRangeEnd:   *portRangeEnd,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create exporter")
