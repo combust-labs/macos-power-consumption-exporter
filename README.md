@@ -9,6 +9,7 @@ This program exports the power usage of your macOS device as Prometheus metrics.
 
 - Exports CPU, GPU, ANE (Apple Neural Engine), and combined power usage
 - Prometheus metrics with hostname label
+- Bearer token authentication for /metrics endpoint (optional)
 - Automatic reader restart on failure
 - Graceful shutdown handling
 - Health check endpoint
@@ -38,36 +39,48 @@ make install
 make build
 ```
 
-### Pre-built Binaries
-
-Download the latest release from the [Releases](https://github.com/combust-labs/macos-power-consumption-exporter/releases) page.
-
 ### DMG Installer (Recommended for macOS)
 
-For a native macOS installation experience, download the DMG installer:
+For a native macOS installation experience, build a DMG from source:
 
-1. Download the latest `.dmg` file from [Releases](https://github.com/combust-labs/macos-power-consumption-exporter/releases)
-2. Double-click the DMG to mount it
-3. Drag "MacOS Power Consumption Exporter" to the Applications folder
-4. Enable auto-start at boot:
+```bash
+# Build unsigned DMG (for development/testing)
+make dmg-unsigned
+
+# Build signed DMG (requires Developer ID certificate)
+make dmg
+```
+
+The DMG will be created at `dist/MacOS Power Consumption Exporter.dmg`.
+
+**After installing from DMG:**
+
+1. Double-click the DMG to mount it
+2. Drag "MacOS Power Consumption Exporter" to the Applications folder
+3. Enable auto-start at boot:
    ```bash
    sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" install
    ```
 
-### xbar Integration (Optional)
+### pico-xbar Integration (Optional)
 
-For a menu bar display of power metrics without a GUI app, you can use **xbar**:
+For a menu bar display of power metrics, use **[pico-xbar](https://github.com/laborin/pico-xbar)** (a maintained xbar alternative):
 
 #### Installation
 
-```bash
-# Install xbar via Homebrew
-brew install xbar
+**pico-xbar** is a maintained xbar alternative, installed via:
 
-# Or download from: https://xbarapp.com
+```bash
+# Via Homebrew (recommended)
+brew install laborin/tap/pico-xbar
+
+# Or download release from: https://github.com/laborin/pico-xbar/releases
+# Then put the binary on your PATH
 ```
 
 #### Setup
+
+pico-xbar is 100% xbar compatible, so plugins go in the standard xbar directory:
 
 ```bash
 # Create plugins directory
@@ -78,12 +91,9 @@ cp installer/xbar/power-metrics-simple.sh ~/Library/Application\ Support/xbar/pl
 
 # Make executable
 chmod +x ~/Library/Application\ Support/xbar/plugins/power-metrics.10s.sh
+
+# Restart pico-xbar (or click Refresh)
 ```
-
-#### Restart xbar
-
-1. Click the xbar icon in the menu bar
-2. Select "Refresh" or restart xbar
 
 #### Features
 
