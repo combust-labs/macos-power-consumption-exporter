@@ -129,28 +129,40 @@ cat > "${TEMP_DIR}/dmg-root/README.txt" << 'EOF'
 ## Installation
 
 1. Drag "MacOS Power Consumption Exporter" to the Applications folder
-2. Open the application from Applications
-3. The exporter will start automatically
-4. Access metrics at http://localhost:8080/metrics
+2. Enable auto-start at boot (run from Terminal):
+   sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" install
+3. Access metrics at http://localhost:8080/metrics
 
-## First Run
+## Auto-Start
 
-On first launch, you may be prompted for administrator privileges.
-This is required to run the `powermetrics` command.
+The exporter uses a LaunchDaemon to start automatically at system boot.
+To manage it (from the app bundle):
+
+    # Enable auto-start at boot
+    sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" install
+
+    # Other commands
+    sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" start
+    sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" stop
+    sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" status
+    sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" logs
+
+Logs are written to:
+    /var/log/combust-macos-power-consumption-exporter.log
+    /var/log/combust-macos-power-consumption-exporter.error.log
 
 ## Usage
 
-The application runs in the menu bar. Click the icon to:
-- Start/Stop the exporter
-- Open the metrics page
-- Check status
-- Quit
+Access the metrics endpoint:
+    http://localhost:8080/metrics
+
+Health check:
+    http://localhost:8080/health
 
 ## Uninstall
 
-1. Stop the exporter from the menu
-2. Drag the application to Trash
-3. Optionally remove: ~/Library/LaunchAgents/com.combust.macos-power-consumption-exporter.plist
+1. Drag the application to Trash
+2. Run: sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" uninstall
 
 ## Support
 

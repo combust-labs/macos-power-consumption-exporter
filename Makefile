@@ -1,4 +1,4 @@
-.PHONY: build test clean install run help app-bundle dmg dmg-unsigned
+.PHONY: build test clean install run help app-bundle dmg dmg-unsigned launchdaemon-install launchdaemon-uninstall launchdaemon-start launchdaemon-stop launchdaemon-status
 
 # Go parameters
 GOCMD=go
@@ -38,6 +38,13 @@ help:
 	@echo "  sign        - Code sign the app bundle"
 	@echo "  notarize    - Notarize the app bundle (requires signing first)"
 	@echo "  help        - Show this help message"
+	@echo ""
+	@echo "  launchdaemon-install   - Install LaunchDaemon (auto-start at boot)"
+	@echo "  launchdaemon-uninstall - Remove LaunchDaemon"
+	@echo "  launchdaemon-start     - Start the LaunchDaemon now"
+	@echo "  launchdaemon-stop      - Stop the LaunchDaemon"
+	@echo "  launchdaemon-status    - Show LaunchDaemon status"
+	@echo "  launchdaemon-logs      - Show recent logs"
 
 # Build the binary
 build:
@@ -155,3 +162,30 @@ notarize:
 # Create final signed DMG
 dist: app-bundle sign notarize dmg
 	@echo "Distribution package created!"
+
+# LaunchDaemon management (runs at system boot, as root)
+launchdaemon-install:
+	@echo "Installing LaunchDaemon for boot-time startup..."
+	@chmod +x $(INSTALLER_DIR)/scripts/launchdaemon.sh
+	@sudo $(INSTALLER_DIR)/scripts/launchdaemon.sh install
+
+launchdaemon-uninstall:
+	@echo "Uninstalling LaunchDaemon..."
+	@chmod +x $(INSTALLER_DIR)/scripts/launchdaemon.sh
+	@sudo $(INSTALLER_DIR)/scripts/launchdaemon.sh uninstall
+
+launchdaemon-start:
+	@chmod +x $(INSTALLER_DIR)/scripts/launchdaemon.sh
+	@sudo $(INSTALLER_DIR)/scripts/launchdaemon.sh start
+
+launchdaemon-stop:
+	@chmod +x $(INSTALLER_DIR)/scripts/launchdaemon.sh
+	@sudo $(INSTALLER_DIR)/scripts/launchdaemon.sh stop
+
+launchdaemon-status:
+	@chmod +x $(INSTALLER_DIR)/scripts/launchdaemon.sh
+	@$(INSTALLER_DIR)/scripts/launchdaemon.sh status
+
+launchdaemon-logs:
+	@chmod +x $(INSTALLER_DIR)/scripts/launchdaemon.sh
+	@$(INSTALLER_DIR)/scripts/launchdaemon.sh logs

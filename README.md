@@ -49,37 +49,10 @@ For a native macOS installation experience, download the DMG installer:
 1. Download the latest `.dmg` file from [Releases](https://github.com/combust-labs/macos-power-consumption-exporter/releases)
 2. Double-click the DMG to mount it
 3. Drag "MacOS Power Consumption Exporter" to the Applications folder
-4. Run the launcher to start the exporter (see below)
-
-#### Starting the Exporter (After DMG Install)
-
-The application includes a **launcher script** for managing the exporter. Since the app requires elevated privileges to access `powermetrics`, use Terminal to run it:
-
-```bash
-# Navigate to the app bundle
-cd "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS"
-
-# Install and start the exporter (requires admin password)
-sudo ./launcher install
-```
-
-The launcher will:
-- Install a launch agent for auto-start on login
-- Start the exporter immediately
-- Create log files in `~/Library/Logs/com.combust.macos-power-consumption-exporter/`
-
-#### Launcher Commands
-
-The launcher script supports the following commands:
-
-| Command | Description |
-|---------|-------------|
-| `sudo ./launcher install` | Install launch agent and start exporter |
-| `sudo ./launcher start` | Start the exporter |
-| `sudo ./launcher stop` | Stop the exporter |
-| `./launcher status` | Check if exporter is running |
-| `./launcher open` | Open metrics page in browser |
-| `sudo ./launcher uninstall` | Stop and remove launch agent |
+4. Enable auto-start at boot:
+   ```bash
+   sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" install
+   ```
 
 ### xbar Integration (Optional)
 
@@ -101,7 +74,7 @@ brew install xbar
 mkdir -p ~/Library/Application\ Support/xbar/plugins
 
 # Copy the power metrics plugin
-cp installer/bitbar/power-metrics-simple.sh ~/Library/Application\ Support/xbar/plugins/power-metrics.10s.sh
+cp installer/xbar/power-metrics-simple.sh ~/Library/Application\ Support/xbar/plugins/power-metrics.10s.sh
 
 # Make executable
 chmod +x ~/Library/Application\ Support/xbar/plugins/power-metrics.10s.sh
@@ -171,6 +144,52 @@ The exporter will start on `http://localhost:8080` by default.
 ```bash
 sudo ./macos-power-consumption-exporter -addr :9090
 ```
+
+### Auto-Start at Boot (LaunchDaemon)
+
+For automatic startup when the system boots (runs as root), use the LaunchDaemon approach:
+
+#### If Installed via DMG
+
+```bash
+# Enable auto-start at boot
+sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" install
+```
+
+#### If Built from Source
+
+```bash
+# Install and enable auto-start at boot
+sudo make launchdaemon-install
+
+# Or with custom options
+sudo EXPORTER_PORT=9090 LOG_LEVEL=debug make launchdaemon-install
+```
+
+#### LaunchDaemon Management
+
+**From installed app:**
+```bash
+sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" install
+sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" start
+sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" stop
+sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" status
+sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" logs
+sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" uninstall
+```
+
+**From source tree:**
+```bash
+make launchdaemon-install    # Install and start at boot
+make launchdaemon-uninstall  # Remove auto-start
+make launchdaemon-start      # Start now
+make launchdaemon-stop       # Stop running
+exporter
+make launchdaemon-status     # Check if running
+make launchdaemon-logs       # View recent logs
+```
+
+**Note:** LaunchDaemon runs at system boot (not user login). Logs are written to `/var/log/combust-macos-power-consumption-exporter.log`.
 
 ### Command-line Options
 
@@ -246,15 +265,14 @@ go test -v ./internal/power_usage_reader/...
 
 ### Permission Denied
 
-The `powermetrics` command requires sudo permissions. Make sure to run the exporter with sudo:
+The `powermetrics` command requires sudo permissions. Options:
 
 ```bash
-# Command line usage
+# Option 1: Run directly with sudo
 sudo ./macos-power-consumption-exporter
 
-# Or via launcher (after DMG install)
-cd "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS"
-sudo ./launcher install
+# Option 2: Use LaunchDaemon (auto-starts at boot as root)
+sudo make launchdaemon-install
 ```
 
 ### Port Already in Use
@@ -280,6 +298,21 @@ sudo powermetrics --help
 - `powermetrics` is a macOS-specific command that requires direct hardware access
 - It accesses CPU, GPU, and ANE power sensors that are not available in containers
 - The program must run directly on a Mac with sudo privileges
+
+### LaunchDaemon Not Starting at Boot
+
+If the LaunchDaemon isn't starting at boot:
+
+```bash
+# Check status
+make launchdaemon-status
+
+# Manually load
+sudo launchctl load /Library/LaunchDaemons/com.combust.macos-power-consumption-exporter.plist
+
+# Check system logs
+tail -f /var/log/system.log | grep combust
+```
 
 ## Uninstallation
 
@@ -310,12 +343,24 @@ sudo pkill macos-power-consumption-exporter
 sudo rm -f /usr/local/bin/macos-power-consumption-exporter
 ```
 
+### Via LaunchDaemon
+
+If you installed via LaunchDaemon:
+
+```bash
+# From installed app bundle
+sudo "/Applications/MacOS Power Consumption Exporter.app/Contents/MacOS/launchdaemon.sh" uninstall
+
+# Or from source tree
+sudo make launchdaemon-uninstall
+```
+
 ### What Gets Removed
 
 The uninstall script removes:
 - Application bundle from `/Applications` or `~/Applications`
-- Launch agent (`~/Library/LaunchAgents/com.combust.macos-power-consumption-exporter.plist`)
-- Log files (`~/Library/Logs/com.combust.macos-power-consumption-exporter/`)
+- LaunchDaemon (`/Library/LaunchDaemons/com.combust.macos-power-consumption-exporter.plist`)
+- Log files (`/var/log/combust-macos-power-consumption-exporter*.log`)
 - Cache files (`~/Library/Caches/com.combust.macos-power-consumption-exporter/`)
 - Preference files
 
