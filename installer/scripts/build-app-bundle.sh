@@ -111,10 +111,10 @@ mkdir -p "${RESOURCES_PATH}"
 log_step "Copying binary..."
 cp "${BUILD_DIR}/macos-power-consumption-exporter" "${MACOS_PATH}/"
 
-# Step 4: Copy launcher script
-log_step "Copying launcher script..."
-cp "${SOURCE_DIR}/installer/app/launcher.sh" "${MACOS_PATH}/launcher"
-chmod +x "${MACOS_PATH}/launcher"
+# Step 4: Copy launchdaemon management script
+log_step "Copying launchdaemon management script..."
+cp "${SOURCE_DIR}/installer/scripts/launchdaemon.sh" "${MACOS_PATH}/"
+chmod +x "${MACOS_PATH}/launchdaemon.sh"
 
 # Step 5: Create Info.plist
 log_step "Creating Info.plist..."
